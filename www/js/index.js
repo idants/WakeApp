@@ -5,6 +5,18 @@ var providerTypes = {
 
 var exitConfirmOpened = false;
 
+
+var pushToCenterDiv;
+$(document).ready(function() {
+    pushToCenterDiv = $('.pushToCenterDiv');
+    pushToCenterDiv.height(window.innerHeight/2-70);
+
+    window.onresize = function() {
+        pushToCenterDiv.height(window.innerHeight/2-70);
+    };
+});
+
+
 var app = {
     config: {
         isDebug:            true,

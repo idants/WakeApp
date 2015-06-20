@@ -3,6 +3,8 @@ var providerTypes = {
     API: 1
 };
 
+var exitConfirmOpened = false;
+
 var app = {
     config: {
         isDebug:            true,
@@ -196,6 +198,20 @@ var app = {
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function () {
         app.receivedEvent('deviceready');
+
+        document.addEventListener("backbutton", function(){
+            if (!exitConfirmOpened) {
+                exitConfirmOpened = true;
+
+                navigator.app.exitApp();
+
+                //confirm('This will close Seedrom. Are you sure?',
+                //    function(){
+                //        navigator.app.exitApp();  //Closes the app
+                //    },
+                //    function(){ exitConfirmOpened=false; });
+            }
+        });
     },
     // Update DOM on a Received Event
     receivedEvent: function (id) {

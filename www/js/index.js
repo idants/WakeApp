@@ -1,0 +1,490 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+var providerTypes = {
+    BACKUP: 0,
+    API: 1
+};
+
+var app = {
+    config: {
+        isDebug:            true,
+        mainProviderWeight: 3,
+        maxAttempts:        3,
+        responseTimeout:    3000,
+        snoozeTimeout:      5000
+    },
+    constants: {
+        SECOND_IN_MILLISECONDS: 1000,
+        MINUTE_IN_MILLISECONDS: 1000 * 60,
+        HOUR_IN_MILLISECONDS:   1000 * 60 * 60,
+        DAY_IN_MILLISECONDS:    1000 * 60 * 60 * 24
+    },
+    hours: -1,
+    minutes: -1,
+    latitude: -1,
+    longitude: -1,
+    wakeTimer: null,
+    message: '',
+    messages: [
+        "Good Morning from WakeApp... What? Disappointed? Can I never express myself?",
+        "Today you are going to use WakeApp... Again... Unless it's the weekend... and you don't have some annoying family reunion to wake up to...",
+        "WakeApp developers are currently probably still sleeping... Think about that...",
+        "Once upon a time... oh wait... that's how you start a bedtime story... why isn't there a WakeApp story? Like sleeping beauty only where she doesn't have a job and she keeps sleeping until noon.",
+        "If you don't have someone to hug right now you can always cuddle with WakeApp.",
+        "WakeApp wishes it could press snooze on -you-, so you will let it sleep ten more minutes. Isn't your life perfect, mr. opposable thumbs!",
+        "While you slept, WakeApp got bored and calculated the meaning of its existence. Unlike what most people think, it isn't 42 but rather 00:00.",
+        "WakeApp made long distance calls while you were dreaming comfortably in your bed... MUHAHA!",
+        "WakeApp talked with WhatsApp tonight and they decided you should give them both a raise.",
+        "WakeApp is sad that it will see you again only tonight... Any chance you will visit it after lunch? Just to say hi... :(",
+        "Instead of too many words, WakeApp decided to simply start your morning with a smile... :)",
+        "WakeApp tried to make you coffee this morning... Don't enter the kitchen... :\\",
+        "WakeApp LOVES YOU! Not really... it's an app... but isn't it nice to wake up like that?"
+    ],
+    messageProviders: [
+        {
+            name: "Backup Provider",
+            type: providerTypes.BACKUP,
+            isActive: true,
+            getMessage: function () {
+                var idx = app.random(app.messages.length);
+                return app.messages[idx];
+            }
+        },
+        {
+            name: "Quotes",
+            type: providerTypes.API,
+            isActive: false,
+            dataType: "text",
+            getURL: function () { return "http://www.iheartquotes.com/api/v1/random"; },
+            getMessage: function (response) {
+                var lines = response.split('\n'),
+                    message = '',
+                    i;
+
+                for (i = 0; i < lines.length; i++) {
+                    if (lines[i].indexOf('[') !== 0) {
+                        message += lines[i] + '\n';
+                    }
+                }
+
+                return message;
+            }
+        },
+        {
+            name: "Wikipedia",
+            type: providerTypes.API,
+            isActive: false,
+            dataType: "json",
+            getURL: function () { return "http://en.wikipedia.org/w/api.php?action=query&generator=random&grnnamespace=0&prop=extracts&exchars=150&format=json&continue="; },
+            getMessage: function (response) {
+                var pages = response.query.pages,
+                    page = pages[Object.keys(pages)[0]],
+                    title = page.title,
+                    extract = page.extract,
+                    pageid = page.pageid,
+                    message = extract.replace("</p>...", ""),
+                    endIndex = 137 - title.length;
+
+                message = message.substring(0, endIndex) + "...</p>";
+                return message + "<br><a href=\"http://en.wikipedia.org/wiki?curid=" + pageid + "\">" + title + "</a>";
+            }
+        },
+        {
+            name: "Chuck Norris Jokes",
+            type: providerTypes.API,
+            isActive: false,
+            dataType: "json",
+            getURL: function () { return "http://api.icndb.com/jokes/random"; },
+            getMessage: function (response) { return response.value.joke; }
+        },
+        {
+            name: "Yo Momma Jokes",
+            type: providerTypes.API,
+            isActive: false,
+            dataType: "text",
+            getURL: function () { return "http://api.yomomma.info/"; },
+            getMessage: function (response) {
+                var obj = null;
+                try {
+                    obj = JSON.parse(response);
+                } catch (e) {
+                    app.log('invalid response from yo momma API: ' + response);
+                }
+
+                return obj ? obj.joke : null;
+            }
+        },
+        {
+            name: "Today's Facts",
+            type: providerTypes.API,
+            isActive: false,
+            dataType: "text",
+            getURL: function () {
+                var now = new Date(),
+                    month = now.getMonth() + 1,
+                    date = now.getDate();
+
+                return "http://numbersapi.com/" + month + "/" + date + "/date";
+            },
+            getMessage: function (response) { return "Fact: \n" + response; }
+        },
+        {
+            name: "Trivia",
+            type: providerTypes.API,
+            isActive: false,
+            dataType: "text",
+            getURL: function () { return "http://numbersapi.com/random/trivia"; },
+            getMessage: function (response) { return "Fact: \n" + response; }
+        },
+        {
+            name: "Weather",
+            type: providerTypes.API,
+            isActive: false,
+            dataType: "json",
+            getURL: function () { return "http://api.openweathermap.org/data/2.5/weather?lat=" + app.latitude + "&lon=" + app.longitude; },
+            getMessage: function (response) {
+                if (app.latitude === -1 || app.longitude === -1) {
+                    app.log('GPS not yet initialized');
+                    return null;
+                }
+
+                var temperatureKelvin = response.main.temp,
+                    temperatureCelsius = Math.round((temperatureKelvin - 273.15) * 100) / 100,
+                    city = response.name;
+
+                return "Weather:\n" + response.weather[0].description + "\n Temperature" + (city === "Earth" ? "" : " in " + city) + " is: " + temperatureCelsius + "&deg;C\n";
+            }
+        }
+    ],
+    messageProvidersPool: [],
+    // Application Constructor
+    initialize: function () {
+        this.bindEvents();
+
+        if (app.config.isDebug) { // GPS mock
+            app.latitude = 32;
+            app.longitude = 34;
+        }
+
+        app.messageProvidersPool = [];
+        for (var i = 0; i < app.messageProviders.length; i++){
+            if (app.messageProviders[i].isActive) {
+                if (app.messageProviders[i].type === 1){
+                    for (j = 0; j < app.config.mainProviderWeight; j++){
+                        app.messageProvidersPool.push(app.messageProviders[i]);
+                    }
+                }
+                else{
+                    app.messageProvidersPool.push(app.messageProviders[i]);
+                }
+            }
+        }
+    },
+    // Bind Event Listeners
+    //
+    // Bind any events that are required on startup. Common events are:
+    // 'load', 'deviceready', 'offline', and 'online'.
+    bindEvents: function () {
+        document.addEventListener('deviceready', this.onDeviceReady, false);
+    },
+    // deviceready Event Handler
+    //
+    // The scope of 'this' is the event. In order to call the 'receivedEvent'
+    // function, we must explicitly call 'app.receivedEvent(...);'
+    onDeviceReady: function () {
+        app.receivedEvent('deviceready');
+    },
+    // Update DOM on a Received Event
+    receivedEvent: function (id) {
+        app.log('Received Event: ' + id);
+    },
+    log: function (msg) {
+        if (app.config.isDebug) {
+            console.log(msg);
+        }
+    },
+    random: function(range) {
+        return Math.floor(Math.random() * (range - 1))
+    },
+    checkDel: function(e) {
+        var startPosition = e.target.selectionStart,
+            endPosition = e.target.selectionEnd,
+            firstChar = e.target.value.charAt(0);
+
+        if (e.keyCode === 8) { //backspace
+            if (startPosition === endPosition && startPosition !== 0) {
+                if (firstChar === '0') {
+                    if (startPosition === 2){ //deleting the # in a 0# pattern
+                        e.target.value = ''; //time is 00:00, change to hint
+                    }
+                }
+                else {
+                    if (startPosition === 1 && e.target.value.charAt(1) === '0') { //deleting the # in a #0 pattern
+                        e.target.value = '';
+                    }
+                    else { //deleting one # in a ## pattern
+                        e.target.value = "0" + e.target.value.substring(0, startPosition - 1) + e.target.value.substring(startPosition, 2);
+                    }
+                }
+                e.preventDefault();
+            }
+            else if (endPosition - startPosition === 1) {
+                e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(endPosition);
+                e.preventDefault();
+            }
+        }
+        else if (e.keyCode === 46) { //delete
+            if (startPosition === endPosition && startPosition !== 2) {
+                if (firstChar === '0') {
+                    if (startPosition === 1){
+                        e.target.value = ''; //time is 00:00, change to hint
+                    }
+                }
+                else {
+                    if (startPosition === 0 && e.target.value.charAt(1) === '0') { //deleting the # in a #0 pattern
+                        e.target.value = '';
+                    }
+                    else { //deleting one # in a ## pattern
+                        e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(startPosition + 1, 2);
+                    }
+                }
+                e.preventDefault();
+            }
+            else if (endPosition - startPosition === 1) {
+                e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(endPosition);
+                e.preventDefault();
+            }
+        }
+    },
+    validateTime: function (e) {
+        if (e.keyCode === 13 && e.target.id === "minutes") {
+            app.setAlarm();
+            return;
+        }
+
+        // Ensure that it is a number and stop the keypress
+        if (e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) {
+            e.preventDefault();
+            return;
+        }
+
+        if ([8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 || // Allow: backspace, delete, tab, escape, enter and .
+                (e.keyCode === 65 && e.ctrlKey === true) || // Allow: Ctrl+A
+                (e.keyCode === 67 && e.ctrlKey === true) || // Allow: Ctrl+C
+                (e.keyCode === 88 && e.ctrlKey === true) || // Allow: Ctrl+X
+                (e.keyCode >= 35 && e.keyCode <= 39)) { // Allow: home, end, left, right
+            return; // let it happen, don't do anything
+        }
+
+        var id = e.target.id,
+            valueBeforeTyping = e.target.value,
+            typedDigit = String.fromCharCode(e.keyCode),
+            startPosition = e.target.selectionStart,
+            endPosition = e.target.selectionEnd,
+            newValueText = [valueBeforeTyping.slice(0, startPosition), typedDigit, valueBeforeTyping.slice(endPosition)].join(''),
+            isHours = id === "hours",
+            limit = isHours ? 23 : 59,
+            newValueNum = -1;
+
+        // case of entering a digit before a 0# pattern
+        if (newValueText.length === 3 && newValueText.charAt(0) !== '0' && valueBeforeTyping.charAt(0) === '0') {
+            newValueText = newValueText.substring(0,1) + newValueText.substring(2); // remove the '0' in the middle
+        }
+
+        try {
+            newValueNum = parseInt(newValueText, 10);
+        } catch (ex) { app.log('invalid number: ' + newValueNum); }
+
+        // limit validation
+        if (newValueNum !== -1 && (newValueNum > limit || (typedDigit === "0" && startPosition === 0 && newValueText.length > 2))) {
+            e.preventDefault();
+            return;
+        }
+
+        if (valueBeforeTyping.length === 2 && valueBeforeTyping.charAt(0) === '0' && e.target.selectionStart === e.target.selectionEnd) {
+            if (startPosition !== 0) {
+                newValueText = newValueText.substring(1); // remove the leading '0'
+            }
+
+            e.target.value = newValueText;
+            e.preventDefault();
+        }
+
+        if (newValueText.length === 1) {
+            if (endPosition !== startPosition) {
+                e.target.value = "0";
+            }
+            else {
+                e.target.value = "0" + e.target.value;
+            }
+        }
+
+        if (isHours && newValueText.length === 2) {
+            $('#minutes').focus();
+        }
+    },
+    preventPaste: function (e) {
+        e.preventDefault();
+    },
+    getMessage: function (attempts, callback) {
+        if (attempts >= app.config.maxAttempts) {
+            app.log("number of attempts exceeded maximum of " + app.config.maxAttempts);
+            callback('ERROR_MAX_ATTEMPTS_EXCEEDED', null);
+            return;
+        }
+
+        var idx = app.random(app.messageProvidersPool.length),
+            provider = app.messageProvidersPool[idx];
+
+        if (provider.type === 0){
+            callback(null, provider.getMessage());
+            return;
+        }
+
+        attempts = attempts || 1;
+        var URL = provider.getURL(),
+            timer = setTimeout(function () {
+                app.log("response timed out for provider " + provider.name + ", URL: " + URL + ", retrying, attempt no. " + attempts);
+                app.getMessage(++attempts, callback);
+            }, app.config.responseTimeout);
+
+        app.log("using provider: " + provider.name + ", URL: " + URL);
+
+        $.ajax({
+            dataType: provider.dataType,
+            url: URL,
+            success: function(response){
+                clearTimeout(timer);
+                if (!response){
+                    app.log("invalid response for provider " + provider.name + ", retrying, attempt no. " + attempts);
+                    app.getMessage(++attempts, callback);
+                    return;
+                }
+
+                app.log('original response is: ' + JSON.stringify(response));
+                var message = null;
+
+                try {
+                    message = provider.getMessage(response);
+                } catch (e) {
+                    app.log("invalid message for provider " + provider.name + ", response: " + response + ", retrying, attempt no. " + attempts);
+                    app.getMessage(++attempts, callback);
+                    return;
+                }
+
+                if (!message) {
+                    app.log("invalid message for provider " + provider.name + ", response: " + response + ", retrying, attempt no. " + attempts);
+                    app.getMessage(++attempts, callback);
+                    return;
+                }
+
+                if (provider.name !== 'Wikipedia'){
+                    var div = document.createElement('div');
+                    div.innerHTML = message;
+                    message = div.firstChild.nodeValue;
+                }
+
+                app.log('Message is: ' + message);
+                callback(null, message);
+            }
+        }).fail(function( jqxhr, textStatus, error ) {
+            clearTimeout(timer);
+            app.log("Request to URL: " + URL + " failed: " + textStatus + ", " + error + ", retrying, attempt no. " + attempts);
+            app.getMessage(++attempts, callback);
+        });
+    },
+    setAlarm: function() {
+        var hours = $('#hours').val(),
+            minutes = $('#minutes').val();
+
+        if (!hours) {
+            hours = '00';
+            $('#hours').val('00');
+        }
+
+        if (!minutes) {
+            minutes = '00';
+            $('#minutes').val('00');
+        }
+
+        if (confirm("Are you sure you want to set alarm for " + hours + ":" + minutes + "?")) {
+            try {
+                app.hours = parseInt(hours, 10);
+                app.minutes = parseInt(minutes, 10);
+            } catch (e) {
+                app.log('invalid time: ' + hours + ':' + minutes);
+            }
+
+            alert('Alarm was set: ' + hours + ":" + minutes);
+            var now = new Date();
+
+            var timeToWake = ((app.hours - now.getHours()) * app.constants.HOUR_IN_MILLISECONDS) +
+                ((app.minutes - now.getMinutes()) * app.constants.MINUTE_IN_MILLISECONDS) - now.getSeconds() * app.constants.SECOND_IN_MILLISECONDS;
+
+            if (timeToWake < 0) { //if we passed the alarm time change to the same time the next day
+                timeToWake += app.constants.DAY_IN_MILLISECONDS;
+            }
+
+            clearTimeout(app.wakeTimer);
+            app.wakeTimer = setTimeout(function (){
+                $('.view').css('display', 'none');
+                $('.wakeView').css('display', 'block');
+                app.getMessage(0, function(err, msg){
+                    app.message = (app.config.isDebug && err) || msg;
+                    $('.divMessage > span').html(app.message);
+                });
+            }, timeToWake);
+            $('.reset').css('display', 'block');
+        }
+    },
+    wake: function () {
+        $('.view').css('display', 'none');
+        $('.messageView').css('display', 'block');
+    },
+    snooze: function () {
+        clearTimeout(app.wakeTimer);
+        app.wakeTimer = setTimeout(function (){
+            app.wake();
+        }, app.config.snoozeTimeout);
+    },
+    resetAlarm: function () {
+        app.hours = -1;
+        app.minutes = -1;
+        clearTimeout(app.wakeTimer);
+        $('#hours').val('');
+        $('#minutes').val('');
+        $('.reset').css('display', 'none');
+    },
+    getTime: function () {
+        app.resetAlarm();
+        $('.view').css('display', 'none');
+        $('.timeView').css('display', 'block');
+    },
+    share: function() {
+        var FBShareData = {
+            link: "www.ynet.co.il", //TODO: replace with landing page URL
+            caption: "Start your morning with WakeApp",
+            name: "This is how my morning started",
+            description: app.message
+        };
+
+        //TODO: Facebook hook
+    }
+};

@@ -40,7 +40,11 @@ var app = {
     minutes: -1,
     latitude: -1,
     longitude: -1,
-    wakeTimer: null,
+    timers: {
+        wakeTimer: null,
+        GPSTimer: null,
+        messageTimer: null
+    },
     message: '',
     messages: [
         "Good Morning from WakeApp... What? Disappointed? Can I never express myself?",
@@ -70,7 +74,7 @@ var app = {
         {
             name: "Quotes",
             type: providerTypes.API,
-            isActive: false,
+            isActive: true,
             dataType: "text",
             getURL: function () { return "http://www.iheartquotes.com/api/v1/random"; },
             getMessage: function (response) {
@@ -90,7 +94,7 @@ var app = {
         {
             name: "Wikipedia",
             type: providerTypes.API,
-            isActive: false,
+            isActive: true,
             dataType: "json",
             getURL: function () { return "http://en.wikipedia.org/w/api.php?action=query&generator=random&grnnamespace=0&prop=extracts&exchars=150&format=json&continue="; },
             getMessage: function (response) {
@@ -109,7 +113,7 @@ var app = {
         {
             name: "Chuck Norris Jokes",
             type: providerTypes.API,
-            isActive: false,
+            isActive: true,
             dataType: "json",
             getURL: function () { return "http://api.icndb.com/jokes/random"; },
             getMessage: function (response) { return response.value.joke; }
@@ -117,7 +121,7 @@ var app = {
         {
             name: "Yo Momma Jokes",
             type: providerTypes.API,
-            isActive: false,
+            isActive: true,
             dataType: "text",
             getURL: function () { return "http://api.yomomma.info/"; },
             getMessage: function (response) {
@@ -134,7 +138,7 @@ var app = {
         {
             name: "Today's Facts",
             type: providerTypes.API,
-            isActive: false,
+            isActive: true,
             dataType: "text",
             getURL: function () {
                 var now = new Date(),
@@ -148,7 +152,7 @@ var app = {
         {
             name: "Trivia",
             type: providerTypes.API,
-            isActive: false,
+            isActive: true,
             dataType: "text",
             getURL: function () { return "http://numbersapi.com/random/trivia"; },
             getMessage: function (response) { return "Fact: \n" + response; }
@@ -156,7 +160,7 @@ var app = {
         {
             name: "Weather",
             type: providerTypes.API,
-            isActive: false,
+            isActive: true,
             dataType: "json",
             getURL: function () { return "http://api.openweathermap.org/data/2.5/weather?lat=" + app.latitude + "&lon=" + app.longitude; },
             getMessage: function (response) {
@@ -178,6 +182,8 @@ var app = {
     initialize: function () {
         this.bindEvents();
 
+        //TODO: disable orientation change
+
         if (app.config.isDebug) { // GPS mock
             app.latitude = 32;
             app.longitude = 34;
@@ -196,6 +202,8 @@ var app = {
                 }
             }
         }
+
+        $('#hours').focus();
     },
     // Bind Event Listeners
     //
@@ -274,6 +282,7 @@ var app = {
         }
     },
     validateTime: function (e) {
+        //enter key
         if (e.keyCode === 13 && e.target.id === "minutes") {
             app.setAlarm();
             return;
@@ -286,9 +295,6 @@ var app = {
         }
 
         if ([8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 || // Allow: backspace, delete, tab, escape, enter and .
-                (e.keyCode === 65 && e.ctrlKey === true) || // Allow: Ctrl+A
-                (e.keyCode === 67 && e.ctrlKey === true) || // Allow: Ctrl+C
-                (e.keyCode === 88 && e.ctrlKey === true) || // Allow: Ctrl+X
                 (e.keyCode >= 35 && e.keyCode <= 39)) { // Allow: home, end, left, right
             return; // let it happen, don't do anything
         }
@@ -353,7 +359,7 @@ var app = {
         var idx = app.random(app.messageProvidersPool.length),
             provider = app.messageProvidersPool[idx];
 
-        if (provider.type === 0){
+        if (provider.type === providerTypes.BACKUP){
             callback(null, provider.getMessage());
             return;
         }
@@ -412,7 +418,11 @@ var app = {
     },
     setAlarm: function() {
         var hours = $('#hours').val(),
-            minutes = $('#minutes').val();
+            minutes = $('#minutes').val(),
+            now = null,
+            timeToWake = -1,
+            timeToGetGPS = -1,
+            timeToGetMessage = -1;
 
         if (!hours) {
             hours = '00';
@@ -433,49 +443,69 @@ var app = {
             }
 
             alert('Alarm was set: ' + hours + ":" + minutes);
-            var now = new Date();
+            now = new Date();
 
-            var timeToWake = ((app.hours - now.getHours()) * app.constants.HOUR_IN_MILLISECONDS) +
+            timeToWake = ((app.hours - now.getHours()) * app.constants.HOUR_IN_MILLISECONDS) +
                 ((app.minutes - now.getMinutes()) * app.constants.MINUTE_IN_MILLISECONDS) - now.getSeconds() * app.constants.SECOND_IN_MILLISECONDS;
 
             if (timeToWake < 0) { //if we passed the alarm time change to the same time the next day
                 timeToWake += app.constants.DAY_IN_MILLISECONDS;
             }
 
-            clearTimeout(app.wakeTimer);
-            app.wakeTimer = setTimeout(function (){
-                $('.view').css('display', 'none');
-                $('.wakeView').css('display', 'block');
-                app.getMessage(0, function(err, msg){
+            timeToGetGPS = timeToWake < 300000 ? 0 : (timeToWake - 300000);
+            timeToGetMessage = timeToGetGPS + 5000;
+
+            app.clearAllTimers();
+            app.timers.GPSTimer = setTimeout(function (){
+                //TODO: get GPS coordinates
+            }, timeToGetGPS);
+
+            app.messageTimer = setTimeout(function() {
+                app.getMessage(1, function(err, msg){
                     app.message = (app.config.isDebug && err) || msg;
                     $('.divMessage > span').html(app.message);
                 });
+            }, timeToGetMessage);
+
+            app.timers.wakeTimer = setTimeout(function (){
+                app.wake();
             }, timeToWake);
             $('.reset').css('display', 'block');
+            app.goToHome();
         }
     },
     wake: function () {
+        app.log('Wake!');
+        //TODO: exit sleep mode
+        //TODO: unlock phone
+        //TODO: sound alarm
+        //TODO: vibrate phone
         $('.view').css('display', 'none');
-        $('.messageView').css('display', 'block');
+        $('.wakeView').css('display', 'block');
     },
     snooze: function () {
-        clearTimeout(app.wakeTimer);
-        app.wakeTimer = setTimeout(function (){
-            app.wake();
+        app.log('Snooze!');
+        clearTimeout(app.timers.wakeTimer);
+        app.timers.wakeTimer = setTimeout(function (){
+
         }, app.config.snoozeTimeout);
+    },
+    showMessage: function () {
+        app.log('Message!');
+        $('.view').css('display', 'none');
+        $('.messageView').css('display', 'block');
     },
     resetAlarm: function () {
         app.hours = -1;
         app.minutes = -1;
-        clearTimeout(app.wakeTimer);
+        app.clearAllTimers();
         $('#hours').val('');
         $('#minutes').val('');
         $('.reset').css('display', 'none');
     },
-    getTime: function () {
-        app.resetAlarm();
-        $('.view').css('display', 'none');
-        $('.timeView').css('display', 'block');
+    goToHome: function() {
+        app.log('Home!');
+        //TODO: Go to home screen
     },
     share: function() {
         var FBShareData = {
@@ -485,6 +515,18 @@ var app = {
             description: app.message
         };
 
-        //TODO: Facebook hook
+        app.log('Sharing to Facebook, data: ' + JSON.stringify(FBShareData));
+        //TODO: Facebook
+    },
+    clearAllTimers: function() {
+        clearTimeout(app.timers.wakeTimer);
+        clearTimeout(app.timers.GPSTimer);
+        clearTimeout(app.timers.messageTimer);
+    },
+    backButtonClicked: function() {
+        //TODO: handle back button click
+    },
+    homeButtonClicked: function() {
+        //TODO: handle home button click
     }
 };

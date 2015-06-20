@@ -1,22 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 var providerTypes = {
     BACKUP: 0,
     API: 1
@@ -41,9 +22,9 @@ var app = {
     latitude: -1,
     longitude: -1,
     timers: {
-        wakeTimer: null,
-        GPSTimer: null,
-        messageTimer: null
+        wakeTimer: -1,
+        GPSTimer: -1,
+        messageTimer: -1
     },
     message: '',
     messages: [
@@ -181,9 +162,6 @@ var app = {
     // Application Constructor
     initialize: function () {
         this.bindEvents();
-
-        //TODO: disable orientation change
-
         if (app.config.isDebug) { // GPS mock
             app.latitude = 32;
             app.longitude = 34;
@@ -457,7 +435,7 @@ var app = {
 
             app.clearAllTimers();
             app.timers.GPSTimer = setTimeout(function (){
-                //TODO: get GPS coordinates
+                //TODO: get GPS coordinates: http://docs.phonegap.com/en/edge/cordova_geolocation_geolocation.md.html
             }, timeToGetGPS);
 
             app.messageTimer = setTimeout(function() {
@@ -470,6 +448,7 @@ var app = {
             app.timers.wakeTimer = setTimeout(function (){
                 app.wake();
             }, timeToWake);
+
             $('.reset').css('display', 'block');
             app.goToHome();
         }
@@ -524,9 +503,9 @@ var app = {
         clearTimeout(app.timers.messageTimer);
     },
     backButtonClicked: function() {
-        //TODO: handle back button click
+        //TODO: handle back button click: app.goToHome()
     },
     homeButtonClicked: function() {
-        //TODO: handle home button click
+        //TODO: handle home button click: app.goToHome()
     }
 };

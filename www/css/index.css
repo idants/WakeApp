@@ -115,7 +115,7 @@ h1 {
 .time {
     width: 78px;
     height: 70px;
-    font-size: 70px;
+    font-size: 5em;
     text-align: center;
     background-color: black;
     color: white;
@@ -124,7 +124,7 @@ h1 {
 
 .colon {
     vertical-align: super;
-    font-size: 70px;
+    font-size: 5em;
     color: white;
 }
 

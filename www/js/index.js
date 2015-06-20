@@ -471,6 +471,9 @@ var app = {
     },
     wake: function () {
         app.log('Wake!');
+
+        //PG plugin: https://github.com/wnyc/cordova-plugin-wakeuptimer
+
         //TODO: exit sleep mode
         //TODO: unlock phone
         //TODO: sound alarm
@@ -511,7 +514,7 @@ var app = {
         };
 
         app.log('Sharing to Facebook, data: ' + JSON.stringify(FBShareData));
-        //TODO: Facebook
+        //TODO: Facebook: Plugin doc https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin
     },
     clearAllTimers: function() {
         clearTimeout(app.timers.wakeTimer);
@@ -519,9 +522,11 @@ var app = {
         clearTimeout(app.timers.messageTimer);
     },
     backButtonClicked: function() {
-        //TODO: handle back button click: app.goToHome()
+        //TODO: handle back button click: app.goToHome() , exists already on "backbutton" event
     },
     homeButtonClicked: function() {
         //TODO: handle home button click: app.goToHome()
     }
+
+    //TODO: look at all possible addEventListener events: http://docs.phonegap.com/en/edge/cordova_events_events.md.html#Events
 };

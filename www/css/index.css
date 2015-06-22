@@ -133,6 +133,7 @@ h1 {
     bottom: 0px;
     width: 90%;
     height: 12%;
+    min-height: 50px;
     transform: translate(5%, -50%);
     border-style: none;
     font-weight: bold;

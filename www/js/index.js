@@ -227,10 +227,7 @@ var app = {
                 'message: ' + error.message + '\n');
         }
 
-        alert('starting GPS');
-        setInterval(function () {
-            navigator.geolocation.getCurrentPosition(onSuccess, onError);
-        }, 5000);
+        navigator.geolocation.getCurrentPosition(onSuccess, onError);
 
         document.addEventListener("backbutton", function(){
             if (!exitConfirmOpened) {
@@ -259,7 +256,6 @@ var app = {
         return Math.floor(Math.random() * (range - 1))
     },
     checkDel: function(e) {
-        alert(e.keyCode);
         var startPosition = e.target.selectionStart,
             endPosition = e.target.selectionEnd,
             firstChar = e.target.value.charAt(0);

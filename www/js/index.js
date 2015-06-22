@@ -256,6 +256,7 @@ var app = {
         return Math.floor(Math.random() * (range - 1))
     },
     checkDel: function(e) {
+        alert(e.keyCode);
         var startPosition = e.target.selectionStart,
             endPosition = e.target.selectionEnd,
             firstChar = e.target.value.charAt(0);

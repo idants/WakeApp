@@ -227,7 +227,10 @@ var app = {
                 'message: ' + error.message + '\n');
         }
 
-        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+        alert('starting GPS');
+        setInterval(function () {
+            navigator.geolocation.getCurrentPosition(onSuccess, onError);
+        }, 5000);
 
         document.addEventListener("backbutton", function(){
             if (!exitConfirmOpened) {

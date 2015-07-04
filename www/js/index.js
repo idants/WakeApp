@@ -256,122 +256,131 @@ var app = {
         return Math.floor(Math.random() * (range - 1))
     },
     checkDel: function(e) {
-        var element = document.getElementById(e.target.id),
-            startPosition = element.selectionStart,
-            endPosition = element.selectionEnd,
-            firstChar = e.target.value.charAt(0);
+        try {
+            var element = document.getElementById(e.target.id),
+                startPosition = element.selectionStart,
+                endPosition = element.selectionEnd,
+                firstChar = e.target.value.charAt(0);
 
-        //alert('start:' + startPosition + ' end:' + endPosition);
-        if (e.keyCode === 8) { //backspace
-            if (startPosition === endPosition && startPosition !== 0) {
-                if (firstChar === '0') {
-                    if (startPosition === 2){ //deleting the # in a 0# pattern
-                        e.target.value = ''; //time is 00:00, change to hint
+            //alert('start:' + startPosition + ' end:' + endPosition);
+            if (e.keyCode === 8) { //backspace
+                if (startPosition === endPosition && startPosition !== 0) {
+                    if (firstChar === '0') {
+                        if (startPosition === 2) { //deleting the # in a 0# pattern
+                            e.target.value = ''; //time is 00:00, change to hint
+                        }
                     }
+                    else {
+                        if (startPosition === 1 && e.target.value.charAt(1) === '0') { //deleting the # in a #0 pattern
+                            e.target.value = '';
+                        }
+                        else { //deleting one # in a ## pattern
+                            e.target.value = "0" + e.target.value.substring(0, startPosition - 1) + e.target.value.substring(startPosition, 2);
+                        }
+                    }
+                    e.preventDefault();
                 }
-                else {
-                    if (startPosition === 1 && e.target.value.charAt(1) === '0') { //deleting the # in a #0 pattern
-                        e.target.value = '';
-                    }
-                    else { //deleting one # in a ## pattern
-                        e.target.value = "0" + e.target.value.substring(0, startPosition - 1) + e.target.value.substring(startPosition, 2);
-                    }
+                else if (endPosition - startPosition === 1) {
+                    e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(endPosition);
+                    e.preventDefault();
                 }
-                e.preventDefault();
             }
-            else if (endPosition - startPosition === 1) {
-                e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(endPosition);
-                e.preventDefault();
-            }
-        }
-        else if (e.keyCode === 46) { //delete
-            if (startPosition === endPosition && startPosition !== 2) {
-                if (firstChar === '0') {
-                    if (startPosition === 1){
-                        e.target.value = ''; //time is 00:00, change to hint
+            else if (e.keyCode === 46) { //delete
+                if (startPosition === endPosition && startPosition !== 2) {
+                    if (firstChar === '0') {
+                        if (startPosition === 1) {
+                            e.target.value = ''; //time is 00:00, change to hint
+                        }
                     }
+                    else {
+                        if (startPosition === 0 && e.target.value.charAt(1) === '0') { //deleting the # in a #0 pattern
+                            e.target.value = '';
+                        }
+                        else { //deleting one # in a ## pattern
+                            e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(startPosition + 1, 2);
+                        }
+                    }
+                    e.preventDefault();
                 }
-                else {
-                    if (startPosition === 0 && e.target.value.charAt(1) === '0') { //deleting the # in a #0 pattern
-                        e.target.value = '';
-                    }
-                    else { //deleting one # in a ## pattern
-                        e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(startPosition + 1, 2);
-                    }
+                else if (endPosition - startPosition === 1) {
+                    e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(endPosition);
+                    e.preventDefault();
                 }
-                e.preventDefault();
             }
-            else if (endPosition - startPosition === 1) {
-                e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(endPosition);
-                e.preventDefault();
-            }
+        } catch (e) {
+            alert('checkDel error: ' + e.message);
         }
     },
     validateTime: function (e) {
-        //enter key
-        if (e.keyCode === 13 && e.target.id === "minutes") {
-            app.setAlarm();
-            return;
-        }
-
-        // Ensure that it is a number and stop the keypress
-        if (e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) {
-            e.preventDefault();
-            return;
-        }
-
-        if ([8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 || // Allow: backspace, delete, tab, escape, enter and .
-                (e.keyCode >= 35 && e.keyCode <= 39)) { // Allow: home, end, left, right
-            return; // let it happen, don't do anything
-        }
-
-        var id = e.target.id,
-            element = document.getElementById(e.target.id),
-            valueBeforeTyping = e.target.value,
-            typedDigit = String.fromCharCode(e.keyCode),
-            startPosition = element.selectionStart,
-            endPosition = element.selectionEnd,
-            newValueText = [valueBeforeTyping.slice(0, startPosition), typedDigit, valueBeforeTyping.slice(endPosition)].join(''),
-            isHours = id === "hours",
-            limit = isHours ? 23 : 59,
-            newValueNum = -1;
-
-        //alert('start:' + startPosition + ' end:' + endPosition + ' newVal:' + newValueText);
-        // case of entering a digit before a 0# pattern
-        if (newValueText.length === 3 && newValueText.charAt(0) !== '0' && valueBeforeTyping.charAt(0) === '0') {
-            newValueText = newValueText.substring(0,1) + newValueText.substring(2); // remove the '0' in the middle
-        }
-
-        try {
-            newValueNum = parseInt(newValueText, 10);
-        } catch (ex) { app.log('invalid number: ' + newValueNum); }
-
-        // limit validation
-        if (newValueNum !== -1 && (newValueNum > limit || (typedDigit === "0" && startPosition === 0 && newValueText.length > 2))) {
-            e.preventDefault();
-            return;
-        }
-
-        if (valueBeforeTyping.length === 2 && valueBeforeTyping.charAt(0) === '0' && e.target.selectionStart === e.target.selectionEnd) {
-            if (startPosition !== 0) {
-                newValueText = newValueText.substring(1); // remove the leading '0'
+        try { //enter key
+            if (e.keyCode === 13 && e.target.id === "minutes") {
+                app.setAlarm();
+                return;
             }
 
-            e.target.value = newValueText;
-            e.preventDefault();
-        }
-
-        if (newValueText.length === 1) {
-            if (endPosition !== startPosition) {
-                e.target.value = "0";
+            // Ensure that it is a number and stop the keypress
+            if (e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) {
+                e.preventDefault();
+                return;
             }
-            else {
-                e.target.value = "0" + e.target.value;
-            }
-        }
 
-        if (isHours && newValueText.length === 2) {
-            $('#minutes').focus();
+            if ([8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 || // Allow: backspace, delete, tab, escape, enter and .
+                    (e.keyCode >= 35 && e.keyCode <= 39)) { // Allow: home, end, left, right
+                return; // let it happen, don't do anything
+            }
+
+            var id = e.target.id,
+                element = document.getElementById(e.target.id),
+                valueBeforeTyping = e.target.value,
+                typedDigit = String.fromCharCode(e.keyCode),
+                startPosition = element.selectionStart,
+                endPosition = element.selectionEnd,
+                newValueText = [valueBeforeTyping.slice(0, startPosition), typedDigit, valueBeforeTyping.slice(endPosition)].join(''),
+                isHours = id === "hours",
+                limit = isHours ? 23 : 59,
+                newValueNum = -1;
+
+            //alert('start:' + startPosition + ' end:' + endPosition + ' newVal:' + newValueText);
+            // case of entering a digit before a 0# pattern
+            if (newValueText.length === 3 && newValueText.charAt(0) !== '0' && valueBeforeTyping.charAt(0) === '0') {
+                newValueText = newValueText.substring(0, 1) + newValueText.substring(2); // remove the '0' in the middle
+            }
+
+            try {
+                newValueNum = parseInt(newValueText, 10);
+            } catch (ex) {
+                app.log('invalid number: ' + newValueNum);
+            }
+
+            // limit validation
+            if (newValueNum !== -1 && (newValueNum > limit || (typedDigit === "0" && startPosition === 0 && newValueText.length > 2))) {
+                e.preventDefault();
+                return;
+            }
+
+            if (valueBeforeTyping.length === 2 && valueBeforeTyping.charAt(0) === '0' && e.target.selectionStart === e.target.selectionEnd) {
+                if (startPosition !== 0) {
+                    newValueText = newValueText.substring(1); // remove the leading '0'
+                }
+
+                e.target.value = newValueText;
+                e.preventDefault();
+            }
+
+            if (newValueText.length === 1) {
+                if (endPosition !== startPosition) {
+                    e.target.value = "0";
+                }
+                else {
+                    e.target.value = "0" + e.target.value;
+                }
+            }
+
+            if (isHours && newValueText.length === 2) {
+                $('#minutes').focus();
+            }
+        } catch (e) {
+            alert('validateTime error: ' + e.message);
         }
     },
     preventPaste: function (e) {

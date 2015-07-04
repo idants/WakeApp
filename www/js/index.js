@@ -257,12 +257,12 @@ var app = {
     },
     checkDel: function(e) {
         try {
-            var element = document.getElementById(e.target.id),
-                startPosition = element.selectionStart,
-                endPosition = element.selectionEnd,
+            var startPosition = e.target.selectionStart,
+                endPosition = e.target.selectionEnd,
                 firstChar = e.target.value.charAt(0);
 
             if (e.keyCode === 8) { //backspace
+                startPosition = endPosition;
                 if (startPosition === endPosition && startPosition !== 0) {
                     if (firstChar === '0') {
                         if (startPosition === 2) { //deleting the # in a 0# pattern
@@ -330,11 +330,10 @@ var app = {
             }
 
             var id = e.target.id,
-                element = document.getElementById(e.target.id),
                 valueBeforeTyping = e.target.value,
                 typedDigit = String.fromCharCode(e.keyCode),
-                startPosition = element.selectionStart,
-                endPosition = element.selectionEnd,
+                startPosition = e.target.selectionStart,
+                endPosition = e.target.selectionEnd,
                 newValueText = [valueBeforeTyping.slice(0, startPosition), typedDigit, valueBeforeTyping.slice(endPosition)].join(''),
                 isHours = id === "hours",
                 limit = isHours ? 23 : 59,

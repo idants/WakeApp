@@ -256,12 +256,6 @@ var app = {
         return Math.floor(Math.random() * (range - 1))
     },
     validateTime: function (e) {
-        //enter key
-        if (e.keyCode === 13 && e.target.id === "minutes") {
-            app.setAlarm();
-            return;
-        }
-
         // Ensure that it is a number and stop the keypress
         if (e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) {
             e.preventDefault();
@@ -284,8 +278,6 @@ var app = {
             ? valueBeforeTyping.substring(1)
             : valueBeforeTyping) + typedDigit;
 
-        //alert('start:' + startPosition + ' end:' + endPosition + ' newVal:' + newValueText);
-
         try {
             newValueNum = parseInt(newValueText, 10);
         } catch (ex) {
@@ -299,24 +291,30 @@ var app = {
         }
 
         if (isHours && newValueText.length === 2) {
-            $('#minutes').focus();
+            var $minutes = $('#minutes');
+            $minutes.focus();
+            $minutes[0].selectionStart = 0;
+            $minutes[0].selectionEnd = $minutes.val().length;
         }
     },
     preventPaste: function (e) {
         e.preventDefault();
     },
-    selectAll: function(e, name) {
-        app.log(name);
+    selectAll: function(e) {
         e.target.selectionStart = 0;
         e.target.selectionEnd = e.target.value.length;
 
         var id = e.target.id,
             otherInputId = id === 'hours' ? 'minutes' : 'hours',
-            otherElement = document.getElementById(otherInputId);
+            otherElement = $('#' + otherInputId);
 
-        app.log(otherElement.value);
-        if (otherElement.value.length === 1) {
-            otherElement.value = "0" + otherElement.value;
+        if (otherElement.val().length === 1) {
+            if (otherElement.val() === "0") {
+                otherElement.val("");
+            }
+            else{
+                otherElement.val("0" + otherElement.val());
+            }
         }
     },
     getMessage: function (attempts, callback) {
@@ -387,8 +385,10 @@ var app = {
         });
     },
     setAlarm: function() {
-        var hours = $('#hours').val(),
-            minutes = $('#minutes').val(),
+        var $hours = $('#hours'),
+            $minutes = $('#minutes'),
+            hours = $hours.val(),
+            minutes = $minutes.val(),
             now = null,
             timeToWake = -1,
             timeToGetGPS = -1,
@@ -402,6 +402,17 @@ var app = {
         if (!minutes) {
             minutes = '00';
             $('#minutes').val('00');
+        }
+
+        if (hours.length === 1) {
+            hours = "0" + hours;
+            $hours.val(hours);
+
+        }
+
+        if (minutes.length === 1) {
+            minutes = "0" + minutes;
+            $minutes.val(minutes);
         }
 
         if (confirm("Are you sure you want to set alarm for " + hours + ":" + minutes + "?")) {

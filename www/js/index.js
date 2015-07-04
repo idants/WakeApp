@@ -261,6 +261,7 @@ var app = {
             endPosition = element.selectionEnd,
             firstChar = element.value.charAt(0);
 
+        alert('start:' + startPosition + ' end:' + endPosition);
         if (e.keyCode === 8) { //backspace
             if (startPosition === endPosition && startPosition !== 0) {
                 if (firstChar === '0') {
@@ -305,7 +306,6 @@ var app = {
                 e.preventDefault();
             }
         }
-        alert('start:' + startPosition + ' end:' + endPosition);
     },
     validateTime: function (e) {
         //enter key
@@ -336,6 +336,7 @@ var app = {
             limit = isHours ? 23 : 59,
             newValueNum = -1;
 
+        alert('start:' + startPosition + ' end:' + endPosition + ' newVal:' + newValueText);
         // case of entering a digit before a 0# pattern
         if (newValueText.length === 3 && newValueText.charAt(0) !== '0' && valueBeforeTyping.charAt(0) === '0') {
             newValueText = newValueText.substring(0,1) + newValueText.substring(2); // remove the '0' in the middle

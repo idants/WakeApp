@@ -304,6 +304,7 @@ var app = {
                 e.preventDefault();
             }
         }
+        alert('start:' + startPosition + ' end:' + endPosition);
     },
     validateTime: function (e) {
         //enter key

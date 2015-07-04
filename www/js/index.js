@@ -274,7 +274,7 @@ var app = {
         }
 
         var id = e.target.id,
-            valueBeforeTyping = e.target.selectionEnd - e.target.selectionStart === 2 ? '' : e.target.value,
+            valueBeforeTyping = e.target.selectionEnd > e.target.selectionStart ? '' : e.target.value,
             typedDigit = String.fromCharCode(e.keyCode),
             isHours = id === "hours",
             limit = isHours ? 23 : 59,
@@ -305,19 +305,19 @@ var app = {
     preventPaste: function (e) {
         e.preventDefault();
     },
-    selectAll: function(e) {
-        setTimeout(function () {
-            e.target.selectionStart = 0;
-            e.target.selectionEnd = e.target.value.length;
-        }, 100);
-    },
-    addPaddingZero: function(e) {
-        setTimeout(function () {
-            var elemenet = document.getElementById(e.target.id);
-            if (elemenet.value.length === 1) {
-                elemenet.value = "0" + elemenet.value;
-            }
-        }, 100);
+    selectAll: function(e, name) {
+        app.log(name);
+        e.target.selectionStart = 0;
+        e.target.selectionEnd = e.target.value.length;
+
+        var id = e.target.id,
+            otherInputId = id === 'hours' ? 'minutes' : 'hours',
+            otherElement = document.getElementById(otherInputId);
+
+        app.log(otherElement.value);
+        if (otherElement.value.length === 1) {
+            otherElement.value = "0" + otherElement.value;
+        }
     },
     getMessage: function (attempts, callback) {
         if (attempts >= app.config.maxAttempts) {

@@ -255,59 +255,6 @@ var app = {
     random: function(range) {
         return Math.floor(Math.random() * (range - 1))
     },
-    checkDel: function(e) {
-        var startPosition = e.target.selectionStart,
-            endPosition = e.target.selectionEnd,
-            firstChar = e.target.value.charAt(0);
-
-        if (e.keyCode === 8) { //backspace
-            if (startPosition === endPosition && startPosition !== 0) {
-                if (firstChar === '0') {
-                    if (startPosition === 2) { //deleting the # in a 0# pattern
-                        e.target.value = ''; //time is 00:00, change to hint
-                    }
-                }
-                else {
-                    if (startPosition === 1 && e.target.value.charAt(1) === '0') { //deleting the # in a #0 pattern
-                        e.target.value = '';
-                    }
-                    else { //deleting one # in a ## pattern
-                        e.target.value = "0" + e.target.value.substring(0, startPosition - 1) + e.target.value.substring(startPosition, 2);
-                    }
-                }
-                e.preventDefault();
-            }
-            else if (endPosition - startPosition === 1) {
-                e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(endPosition);
-                e.preventDefault();
-            }
-        }
-        else if (e.keyCode === 46) { //delete
-            if (startPosition === endPosition && startPosition !== 2) {
-                if (firstChar === '0') {
-                    if (startPosition === 1) {
-                        e.target.value = ''; //time is 00:00, change to hint
-                    }
-                }
-                else {
-                    if (startPosition === 0 && e.target.value.charAt(1) === '0') { //deleting the # in a #0 pattern
-                        e.target.value = '';
-                    }
-                    else { //deleting one # in a ## pattern
-                        e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(startPosition + 1, 2);
-                    }
-                }
-                e.preventDefault();
-            }
-            else if (endPosition - startPosition === 1) {
-                e.target.value = "0" + e.target.value.substring(0, startPosition) + e.target.value.substring(endPosition);
-                e.preventDefault();
-            }
-        }
-
-        e.target.selectionStart = 2;
-        //alert('start:' + startPosition + ' end:' + endPosition);
-    },
     validateTime: function (e) {
         //enter key
         if (e.keyCode === 13 && e.target.id === "minutes") {
@@ -327,7 +274,7 @@ var app = {
         }
 
         var id = e.target.id,
-            valueBeforeTyping = e.target.value,
+            valueBeforeTyping = e.target.selectionEnd - e.target.selectionStart === 2 ? '' : e.target.value,
             typedDigit = String.fromCharCode(e.keyCode),
             isHours = id === "hours",
             limit = isHours ? 23 : 59,

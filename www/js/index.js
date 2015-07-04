@@ -326,10 +326,11 @@ var app = {
         }
 
         var id = e.target.id,
-            valueBeforeTyping = e.target.value,
+            element = $('#' + id),
+            valueBeforeTyping = element.value,
             typedDigit = String.fromCharCode(e.keyCode),
-            startPosition = e.target.selectionStart,
-            endPosition = e.target.selectionEnd,
+            startPosition = element.selectionStart,
+            endPosition = element.selectionEnd,
             newValueText = [valueBeforeTyping.slice(0, startPosition), typedDigit, valueBeforeTyping.slice(endPosition)].join(''),
             isHours = id === "hours",
             limit = isHours ? 23 : 59,

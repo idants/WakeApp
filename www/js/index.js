@@ -256,9 +256,10 @@ var app = {
         return Math.floor(Math.random() * (range - 1))
     },
     checkDel: function(e) {
-        var startPosition = e.target.selectionStart,
-            endPosition = e.target.selectionEnd,
-            firstChar = e.target.value.charAt(0);
+        var element = $('#' + e.target.id),
+            startPosition = element.selectionStart,
+            endPosition = element.selectionEnd,
+            firstChar = element.value.charAt(0);
 
         if (e.keyCode === 8) { //backspace
             if (startPosition === endPosition && startPosition !== 0) {

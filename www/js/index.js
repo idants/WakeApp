@@ -256,12 +256,12 @@ var app = {
         return Math.floor(Math.random() * (range - 1))
     },
     checkDel: function(e) {
-        var element = $('#' + e.target.id),
+        var element = document.getElementById(e.target.id),
             startPosition = element.selectionStart,
             endPosition = element.selectionEnd,
-            firstChar = element.value.charAt(0);
+            firstChar = e.target.value.charAt(0);
 
-        alert('start:' + startPosition + ' end:' + endPosition);
+        //alert('start:' + startPosition + ' end:' + endPosition);
         if (e.keyCode === 8) { //backspace
             if (startPosition === endPosition && startPosition !== 0) {
                 if (firstChar === '0') {
@@ -326,8 +326,8 @@ var app = {
         }
 
         var id = e.target.id,
-            element = $('#' + id),
-            valueBeforeTyping = element.value,
+            element = document.getElementById(e.target.id),
+            valueBeforeTyping = e.target.value,
             typedDigit = String.fromCharCode(e.keyCode),
             startPosition = element.selectionStart,
             endPosition = element.selectionEnd,
@@ -336,7 +336,7 @@ var app = {
             limit = isHours ? 23 : 59,
             newValueNum = -1;
 
-        alert('start:' + startPosition + ' end:' + endPosition + ' newVal:' + newValueText);
+        //alert('start:' + startPosition + ' end:' + endPosition + ' newVal:' + newValueText);
         // case of entering a digit before a 0# pattern
         if (newValueText.length === 3 && newValueText.charAt(0) !== '0' && valueBeforeTyping.charAt(0) === '0') {
             newValueText = newValueText.substring(0,1) + newValueText.substring(2); // remove the '0' in the middle

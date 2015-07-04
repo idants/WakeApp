@@ -30,9 +30,9 @@
         <div class="pushToCenterDiv"></div>
         <div class="timeView view">
             <div class="edit">
-                <input id="hours" type="tel" placeholder="00" class="time" onkeypress="app.validateTime(event);" onpaste="app.preventPaste(event)" onkeydown="app.checkDel(event);"/>
+                <input id="hours" type="text" placeholder="00" class="time" onkeypress="app.validateTime(event);" onpaste="app.preventPaste(event)" onkeydown="app.checkDel(event);"/>
                 <span class="colon">:</span>
-                <input id="minutes" type="tel" placeholder="00" class="time" onkeypress="app.validateTime(event);" onpaste="app.preventPaste(event)" onkeydown="app.checkDel(event);"/>
+                <input id="minutes" type="text" placeholder="00" class="time" onkeypress="app.validateTime(event);" onpaste="app.preventPaste(event)" onkeydown="app.checkDel(event);"/>
                 <div class="reset">
                     <img class="resetAlarmMiddle" src="img/delete_icon.png" onclick="app.resetAlarm()">
                     <span class="spAlarm resetAlarmMiddle">Alarm is set</span>

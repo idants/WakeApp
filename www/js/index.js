@@ -4,15 +4,13 @@ var providerTypes = {
 };
 
 var exitConfirmOpened = false;
-
-
 var pushToCenterDiv;
-$(document).ready(function() {
+$(document).ready(function () {
     pushToCenterDiv = $('.pushToCenterDiv');
-    pushToCenterDiv.height(window.innerHeight/2-70);
+    pushToCenterDiv.height(window.innerHeight / 2 - 70);
 
-    window.onresize = function() {
-        pushToCenterDiv.height(window.innerHeight/2-70);
+    window.onresize = function () {
+        pushToCenterDiv.height(window.innerHeight / 2 - 70);
     };
 });
 
@@ -35,6 +33,7 @@ var app = {
     minutes: -1,
     latitude: -1,
     longitude: -1,
+    isManuallyFocused: false,
     timers: {
         wakeTimer: -1,
         GPSTimer: -1,
@@ -195,6 +194,28 @@ var app = {
             }
         }
     },
+    getGPSCoordinates: function() {
+        var onSuccess = function(position) {
+            alert('Latitude: '          + position.coords.latitude          + '\n' +
+                'Longitude: '         + position.coords.longitude         + '\n' +
+                'Altitude: '          + position.coords.altitude          + '\n' +
+                'Accuracy: '          + position.coords.accuracy          + '\n' +
+                'Altitude Accuracy: ' + position.coords.altitudeAccuracy  + '\n' +
+                'Heading: '           + position.coords.heading           + '\n' +
+                'Speed: '             + position.coords.speed             + '\n' +
+                'Timestamp: '         + position.timestamp                + '\n');
+
+            app.latitude = position.coords.latitude;
+            app.longitude = position.coords.longitude;
+        };
+
+        function onError(error) {
+            alert('code: '    + error.code    + '\n' +
+                'message: ' + error.message + '\n');
+        }
+
+        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+    },
     // Bind Event Listeners
     //
     // Bind any events that are required on startup. Common events are:
@@ -209,26 +230,7 @@ var app = {
     onDeviceReady: function () {
         app.receivedEvent('deviceready');
 
-        var onSuccess = function(position) {
-            alert('Latitude: '          + position.coords.latitude          + '\n' +
-                'Longitude: '         + position.coords.longitude         + '\n' +
-                'Altitude: '          + position.coords.altitude          + '\n' +
-                'Accuracy: '          + position.coords.accuracy          + '\n' +
-                'Altitude Accuracy: ' + position.coords.altitudeAccuracy  + '\n' +
-                'Heading: '           + position.coords.heading           + '\n' +
-                'Speed: '             + position.coords.speed             + '\n' +
-                'Timestamp: '         + position.timestamp                + '\n');
-        };
-
-        // onError Callback receives a PositionError object
-        //
-        function onError(error) {
-            alert('code: '    + error.code    + '\n' +
-                'message: ' + error.message + '\n');
-        }
-
-        navigator.geolocation.getCurrentPosition(onSuccess, onError);
-
+        app.getGPSCoordinates();
         document.addEventListener("backbutton", function(){
             if (!exitConfirmOpened) {
                 exitConfirmOpened = true;
@@ -268,11 +270,19 @@ var app = {
         }
 
         var id = e.target.id,
-            valueBeforeTyping = e.target.selectionEnd > e.target.selectionStart ? '' : e.target.value,
+            valueBeforeTyping,
             typedDigit = String.fromCharCode(e.keyCode),
             isHours = id === "hours",
             limit = isHours ? 23 : 59,
             newValueNum = -1;
+
+        if (app.isManuallyFocused || e.target.selectionEnd > e.target.selectionStart) {
+            valueBeforeTyping = '';
+            app.isManuallyFocused = false;
+        }
+        else {
+            valueBeforeTyping = e.target.value;
+        }
 
         var newValueText = ((valueBeforeTyping.length === 2 && valueBeforeTyping.charAt(0) === '0')
             ? valueBeforeTyping.substring(1)
@@ -290,12 +300,13 @@ var app = {
             return;
         }
     },
-    checkIfMoveFocus: function(e) {
+    checkIfFocusRequired: function(e) {
         if (e.target.id === 'hours' && e.target.value.length === 2) {
             var $minutes = $('#minutes');
             $minutes.focus();
             $minutes[0].selectionStart = 0;
             $minutes[0].selectionEnd = $minutes.val().length;
+            app.isManuallyFocused = true;
         }
     },
     preventPaste: function (e) {
@@ -439,6 +450,7 @@ var app = {
 
             app.clearAllTimers();
             app.timers.GPSTimer = setTimeout(function (){
+                app.getGPSCoordinates();
                 //TODO: get GPS coordinates: http://docs.phonegap.com/en/edge/cordova_geolocation_geolocation.md.html
             }, timeToGetGPS);
 

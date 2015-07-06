@@ -290,12 +290,14 @@ var app = {
             return;
         }
 
-        /*if (isHours && newValueText.length === 2) {
-            var $minutes = $('#minutes');
-            $minutes.focus();
-            $minutes[0].selectionStart = 0;
-            $minutes[0].selectionEnd = $minutes.val().length;
-        }*/
+        if (isHours && newValueText.length === 2) {
+            setTimeout(function () {
+                var $minutes = $('#minutes');
+                $minutes.focus();
+                $minutes[0].selectionStart = 0;
+                $minutes[0].selectionEnd = $minutes.val().length;
+            }, 200);
+        }
     },
     preventPaste: function (e) {
         e.preventDefault();

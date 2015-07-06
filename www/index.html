@@ -31,8 +31,8 @@
         <div class="timeView view">
             <div class="edit">
                 <input id="hours" type="tel" placeholder="00" class="time" tabindex="-1"
-                       onkeypress="app.validateTime(event);" onpaste="app.preventPaste(event)"
-                       onclick="app.selectAll(event);"/>
+                       onkeypress="app.validateTime(event);" onkeyup="app.checkIfMoveFocus(event);"
+                       onpaste="app.preventPaste(event)" onclick="app.selectAll(event);"/>
                 <span class="colon">:</span>
                 <input id="minutes" type="tel" placeholder="00" class="time" tabindex="-1"
                        onkeypress="app.validateTime(event);" onpaste="app.preventPaste(event)"

@@ -289,14 +289,13 @@ var app = {
             e.preventDefault();
             return;
         }
-
-        if (isHours && newValueText.length === 2) {
-            setTimeout(function () {
-                var $minutes = $('#minutes');
-                $minutes.focus();
-                $minutes[0].selectionStart = 0;
-                $minutes[0].selectionEnd = $minutes.val().length;
-            }, 200);
+    },
+    checkIfMoveFocus: function(e) {
+        if (e.target.id === 'hours' && e.target.value.length === 2) {
+            var $minutes = $('#minutes');
+            $minutes.focus();
+            $minutes[0].selectionStart = 0;
+            $minutes[0].selectionEnd = $minutes.val().length;
         }
     },
     preventPaste: function (e) {

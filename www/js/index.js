@@ -258,6 +258,9 @@ var app = {
         return Math.floor(Math.random() * (range - 1))
     },
     validateTime: function (e) {
+        if (app.isManuallyFocused) {
+            alert(e.target.selectionStart + ';' + e.target.selectionEnd);
+        }
         // Ensure that it is a number and stop the keypress
         if (e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) {
             e.preventDefault();
@@ -269,20 +272,13 @@ var app = {
             return; // let it happen, don't do anything
         }
 
+        //TODO: bug - when focus moves automatically and minutes are 2-digit long, typed digit gets 3-figit number
         var id = e.target.id,
-            valueBeforeTyping,
+            valueBeforeTyping = e.target.selectionEnd > e.target.selectionStart ? '' : e.target.value,
             typedDigit = String.fromCharCode(e.keyCode),
             isHours = id === "hours",
             limit = isHours ? 23 : 59,
             newValueNum = -1;
-
-        if (app.isManuallyFocused || e.target.selectionEnd > e.target.selectionStart) {
-            valueBeforeTyping = '';
-            app.isManuallyFocused = false;
-        }
-        else {
-            valueBeforeTyping = e.target.value;
-        }
 
         var newValueText = ((valueBeforeTyping.length === 2 && valueBeforeTyping.charAt(0) === '0')
             ? valueBeforeTyping.substring(1)

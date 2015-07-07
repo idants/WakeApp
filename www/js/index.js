@@ -514,11 +514,11 @@ var app = {
             alert('share unavailable');
             return;
         }
-        
-        window.plugins.socialsharing.shareViaFacebook(app.message, null /* img */, null /* url */, function() {
+
+        window.plugins.socialsharing.share(app.message, app.shareData.caption, null /* img */, null /* url */, function() {
             alert('share ok');
         }, function(errormsg){
-            alert(errormsg);
+            alert('error:' + errormsg);
         });
     },
     clearAllTimers: function() {

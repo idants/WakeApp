@@ -29,6 +29,11 @@ var app = {
         HOUR_IN_MILLISECONDS:   1000 * 60 * 60,
         DAY_IN_MILLISECONDS:    1000 * 60 * 60 * 24
     },
+    ShareData: {
+        caption: "Start your morning with WakeApp",
+        name: "This is how my morning started",
+        description: ""
+    },
     hours: -1,
     minutes: -1,
     latitude: -1,
@@ -475,6 +480,7 @@ var app = {
         //TODO: unlock phone
         //TODO: sound alarm
         //TODO: vibrate phone
+        $('.pushToCenterDiv').css('display', 'none');
         $('.view').css('display', 'none');
         $('.wakeView').css('display', 'block');
     },
@@ -503,15 +509,13 @@ var app = {
         //TODO: Go to home screen
     },
     share: function() {
-        var FBShareData = {
-            link: "www.ynet.co.il", //TODO: replace with landing page URL
-            caption: "Start your morning with WakeApp",
-            name: "This is how my morning started",
-            description: app.message
-        };
-
         app.log('Sharing to Facebook, data: ' + JSON.stringify(FBShareData));
-        //TODO: Facebook: Plugin doc https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin
+
+        window.plugins.socialsharing.shareViaFacebook(app.message, null /* img */, null /* url */, function() {
+            alert('share ok');
+        }, function(errormsg){
+            alert(errormsg);
+        });
     },
     clearAllTimers: function() {
         clearTimeout(app.timers.wakeTimer);

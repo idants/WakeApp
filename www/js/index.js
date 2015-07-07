@@ -29,10 +29,9 @@ var app = {
         HOUR_IN_MILLISECONDS:   1000 * 60 * 60,
         DAY_IN_MILLISECONDS:    1000 * 60 * 60 * 24
     },
-    ShareData: {
+    shareData: {
         caption: "Start your morning with WakeApp",
-        name: "This is how my morning started",
-        description: ""
+        name: "This is how my morning started"
     },
     hours: -1,
     minutes: -1,
@@ -509,8 +508,13 @@ var app = {
         //TODO: Go to home screen
     },
     share: function() {
-        app.log('Sharing to Facebook, data: ' + JSON.stringify(FBShareData));
+        app.log('Sharing to Facebook, data: ' + JSON.stringify(app.shareData));
 
+        if (!window.plugins || !window.plugins.socialsharing || !window.plugins.socialsharing.shareViaFacebook) {
+            alert('share unavailable');
+            return;
+        }
+        
         window.plugins.socialsharing.shareViaFacebook(app.message, null /* img */, null /* url */, function() {
             alert('share ok');
         }, function(errormsg){

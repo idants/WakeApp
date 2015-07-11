@@ -515,7 +515,7 @@ var app = {
             return;
         }
 
-        window.plugins.socialsharing.share(app.message, app.shareData.caption, null /* img */, 'http://www.ynet.co.il' /* url */, function() {
+        window.plugins.socialsharing.shareViaFacebook(app.message, app.shareData.caption, null /* img */, 'http://www.ynet.co.il' /* url */, function() {
             alert('share ok');
         }, function(errormsg){
             alert('error:' + errormsg);

@@ -511,11 +511,11 @@ var app = {
         app.log('Sharing to Facebook, data: ' + JSON.stringify(app.shareData));
 
         if (!window.plugins || !window.plugins.socialsharing || !window.plugins.socialsharing.shareViaFacebook) {
-            alert('share unavailable');
+            app.log('share is unavailable');
             return;
         }
 
-        window.plugins.socialsharing.share(app.message, app.shareData.caption, null /* img */, null /* url */, function() {
+        window.plugins.socialsharing.share(app.message, app.shareData.caption, null /* img */, 'http://www.ynet.co.il' /* url */, function() {
             alert('share ok');
         }, function(errormsg){
             alert('error:' + errormsg);

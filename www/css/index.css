@@ -139,17 +139,17 @@ h1 {
     font-weight: bold;
 }
 
-.reset {
+.reset{
     display: none;
     margin-right: 6px;
 }
 
-.spAlarm {
+.spAlarm{
     color: #f5680a;
     font-size: 22px;
 }
 
-.resetAlarmMiddle {
+.resetAlarmMiddle{
     display: inline-block;
     vertical-align: middle;
 }
@@ -163,24 +163,27 @@ h1 {
     display: none;
 }
 
-@font-face {
+@font-face{
     font-family: "brushstr";
     src: url("../fonts/brushstr.ttf") format("truetype");
 }
 
 .wakeBox{
+    display: table;
     position: fixed;
     width: 100%;
     height: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     font-size: 50px;
     font-family: "brushstr", sans-serif;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     border: 20px solid black;
+}
+
+.spWake{
+    display: table-cell;
+    vertical-align: middle;
 }
 
 .snoozeBox{
@@ -196,12 +199,9 @@ h1 {
 
 .divMessage{
     background-color: #8ab5F2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: table;
     position: fixed;
     height: 100%;
-    word-wrap: break-word;
     width: 100%;
     font-size: 23px;
     text-align: center;
@@ -210,6 +210,11 @@ h1 {
     -webkit-box-sizing: border-box;
     border: 7px solid black;
     font-weight: bold;
+}
+
+#spMessage{
+    display: table-cell;
+    vertical-align: middle;
 }
 
 .imgShare{

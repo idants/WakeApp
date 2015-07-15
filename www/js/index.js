@@ -514,11 +514,10 @@ var app = {
             app.log('share is unavailable');
             return;
         }
-
-        window.plugins.socialsharing.shareViaFacebook(app.message, app.shareData.caption, null /* img */, 'http://www.ynet.co.il' /* url */, function() {
-            alert('share ok');
+        window.plugins.socialsharing.shareViaFacebookWithPasteMessageHint(app.message, null /* img */, null /* url */, app.shareData.caption, function() {
+            console.log('share ok')
         }, function(errormsg){
-            alert('error:' + errormsg);
+            alert(errormsg)
         });
     },
     clearAllTimers: function() {

@@ -510,11 +510,11 @@ var app = {
     share: function() {
         app.log('Sharing to Facebook, data: ' + JSON.stringify(app.shareData));
 
-        if (!window.plugins || !window.plugins.socialsharing || !window.plugins.socialsharing.shareViaFacebook) {
+        if (!window.plugins || !window.plugins.socialsharing || !window.plugins.socialsharing.shareViaFacebookWithPasteMessageHint) {
             app.log('share is unavailable');
             return;
         }
-        window.plugins.socialsharing.shareViaFacebookWithPasteMessageHint(app.message, null /* img */, null /* url */, app.shareData.caption, function() {
+        window.plugins.socialsharing.shareViaFacebookWithPasteMessageHint(app.message, null /* img */, 'www.ynet.co.il', app.shareData.caption, function() {
             console.log('share ok')
         }, function(errormsg){
             alert(errormsg)
